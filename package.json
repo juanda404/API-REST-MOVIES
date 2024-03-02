@@ -1,0 +1,19 @@
+{
+  "name": "api-rest-movies",
+  "version": "1.0.0",
+  "description": "This site is thinking in aplication of API-REST as practice form",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanda404/API-REST-MOVIES.git"
+  },
+  "author": "@juanda404",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/juanda404/API-REST-MOVIES/issues"
+  },
+  "homepage": "https://github.com/juanda404/API-REST-MOVIES#readme"
+}
