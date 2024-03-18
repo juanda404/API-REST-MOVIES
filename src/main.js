@@ -10,6 +10,19 @@ const api = axios.create({
     },
 });
 //Util
+
+const lazyloader = new IntersectionObserver((entries)=>{
+    entries.forEach((entry)=>{
+        if (entry.isIntersecting) {
+            const url = entry.target.getAttribute('data-img')
+            entry.target.setAttribute('src', url);
+        }
+
+        ;
+    });
+});
+
+
 function createMovies(movies, container){
     container.innerHTML ='';
 
@@ -23,7 +36,10 @@ function createMovies(movies, container){
         const movieImg = document.createElement('img');
         movieImg.classList.add('movie-img');
         movieImg.setAttribute('alt',movie.title);
-        movieImg.setAttribute('src','https://image.tmdb.org/t/p/w300'+ movie.poster_path);
+        movieImg.setAttribute('data-img','https://image.tmdb.org/t/p/w300'+ movie.poster_path);
+
+        lazyloader.observe(movieImg);
+
         movieContainer.appendChild(movieImg);
         container.appendChild(movieContainer);
     });
