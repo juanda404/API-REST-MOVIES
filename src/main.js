@@ -1,4 +1,4 @@
-/*Instance of library axios*/
+//DATA
 
 const api = axios.create({
     baseURL: 'https://api.themoviedb.org/3/',
@@ -9,6 +9,29 @@ const api = axios.create({
         'api_key': API_KEY,
     },
 });
+//local Store
+function likedMovieList(){
+    const item = JSON.parse(localStorage.getItem('liked_movies'));
+    let movies;
+    if (item) {
+        movies = item;
+    }else{
+        movies ={};
+    }
+    return movies;
+}
+
+function likeMovie(movie){
+
+    const likedMovies = likedMovieList();
+    if (likedMovies[movie.id]) {
+        likedMovies[movie.id] = undefined;
+    }else{
+        likedMovies[movie.id] = movie;
+    }
+    localStorage.setItem('liked_movies',JSON.stringify(likedMovies));
+}
+
 //Util
 
 const lazyloader = new IntersectionObserver((entries)=>{
@@ -23,24 +46,39 @@ const lazyloader = new IntersectionObserver((entries)=>{
 });
 
 
-function createMovies(movies, container){
-    container.innerHTML ='';
+function createMovies(movies, container, {clean=true,}={},){
+
+    if (clean){
+        container.innerHTML ='';
+    }
+  
 
     movies.forEach(movie => {
         const movieContainer = document.createElement('div');
         movieContainer.classList.add('movie-container');
-        movieContainer.addEventListener('click', () =>{
-            location.hash = '#movie='+ movie.id;
-        });
+  
 
         const movieImg = document.createElement('img');
         movieImg.classList.add('movie-img');
         movieImg.setAttribute('alt',movie.title);
         movieImg.setAttribute('data-img','https://image.tmdb.org/t/p/w300'+ movie.poster_path);
+        movieImg.addEventListener('click', () =>{
+            location.hash = '#movie='+ movie.id;
+        });
+
+        const movieBtn = document.createElement('button');
+        movieBtn.classList.add('movie-btn');
+        movieBtn.addEventListener('click',()=>{
+            movieBtn.classList.toggle('movie-btn--liked')
+            likeMovie(movie);
+        })
+
+
 
         lazyloader.observe(movieImg);
 
         movieContainer.appendChild(movieImg);
+        movieContainer.appendChild(movieBtn);
         container.appendChild(movieContainer);
     });
 }
@@ -70,7 +108,7 @@ function createCategories(categories, container){
 
 }
 
-//llamados a la API
+//call back  a la API
 async function getTrendingMoviesPreview(){
     const { data } = await api('trending/movie/day');
     const movies = data.results;
@@ -106,18 +144,74 @@ async function getMoviesBySearch(query){
         }
     });
     const movies = data.results;
+    maxPage = data.total_pages;
 
     createMovies(movies, genericSection);
 
 }
 
+function getPaginatedMoviesBySearch(query){
+    return async function (){
+        const {scrollTop, scrollHeight, clientHeight} = document.documentElement;
+
+        const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight -15);
+    
+        if (scrollIsBottom) {
+            page++;
+            const { data } = await api('search/movie',{
+            params: {
+                query,
+                page,
+            },
+        });
+        const movies = data.results;
+        maxPage 
+    
+        createMovies(movies,genericSection,{clean:false});
+        }
+    }
+}
+
+
 async function getTrendingMovies(){
     const { data } = await api('trending/movie/day');
     const movies = data.results;
 
-    createMovies(movies,genericSection);
+    createMovies(movies,genericSection,{clean:true});
 
+   // const btnloadMore = document.createElement('button');
+   // btnloadMore.innerText = 'Load more';
+   // btnloadMore.addEventListener('click', getPaginatedTrendigMovies);
+    //genericSection.appendChild(btnloadMore);
 }
+
+
+async function getPaginatedTrendingMovies(){
+    const {scrollTop, scrollHeight, clientHeight} = document.documentElement;
+
+    const scrollIsBottom = (scrollTop + clientHeight) >= (scrollHeight -15);
+
+    if (scrollIsBottom) {
+        page++;
+        const { data } = await api('trending/movie/day',{
+        params: {
+            page,
+        },
+    });
+    const movies = data.results;
+
+    createMovies(movies,genericSection,{clean:false});
+    }
+
+
+//    const btnloadMore = document.createElement('button');
+//    btnloadMore.innerText = 'Load more';
+//    btnloadMore.addEventListener('click', getPaginatedTrendigMovies);
+//    genericSection.appendChild(btnloadMore);
+}
+
+
+
 
 async function getMovieById(id){
     const { data: movie } = await api('movie/'+id);
